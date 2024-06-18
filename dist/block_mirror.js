@@ -1252,7 +1252,7 @@ BlockMirrorBlockEditor.prototype.setMode = function (mode) {
   this.workspace.setVisible(configuration.visible);
 
   if (mode == "summary") {
-    this.summarizeBlock([1, 8], true);
+    this.summarizeBlock([1, 8, 14, 17], true);
   }
   if (mode != "summary") {
     console.log("Not summerized");
@@ -1331,6 +1331,20 @@ BlockMirrorBlockEditor.prototype.summarizeBlock = function (linenum_list, quietl
       nodeMutation2.setAttribute("colour", 210);
       nodeMutation2.setAttribute("parameter", 210);
       mutateNodeList.push(nodeMutation2)
+
+      let nodeMutation3 = document.createElement("mutation")
+      nodeMutation3.setAttribute("arguments", 4);
+      nodeMutation3.setAttribute("message", "set_bunny");
+      nodeMutation3.setAttribute("colour", 210);
+      nodeMutation3.setAttribute("parameter", 210);
+      mutateNodeList.push(nodeMutation3)
+
+      let nodeMutation4 = document.createElement("mutation")
+      nodeMutation4.setAttribute("arguments", 4);
+      nodeMutation4.setAttribute("message", "bunny_transform");
+      nodeMutation4.setAttribute("colour", 210);
+      nodeMutation4.setAttribute("parameter", 210);
+      mutateNodeList.push(nodeMutation4)
 
       // for (let linenum of linenum_list){
       //   let nodeMutation = document.createElement("mutation")
