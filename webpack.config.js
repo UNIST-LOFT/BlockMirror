@@ -9,6 +9,7 @@ const JS_BLOCKLY_FILES = [
     path.resolve(__dirname, '../blockly/blocks_compressed.js'),
     path.resolve(__dirname, '../blockly/msg/js/en.js'),
     path.resolve(__dirname, '../blockly/python_compressed.js')
+    path.resolve(__dirname, '../blockly/javascript_compressed.js')
 ];
 
 // CodeMirror

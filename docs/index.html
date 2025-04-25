@@ -1,91 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>Simple BlockMirror Example</title>
-
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-            integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8="
-            crossorigin="anonymous"></script>
-
-
-    <!-- Blockly -->
-    <!-- <script src="../lib/blockly/blockly_compressed.js" type="text/javascript"></script>
-    <script src="/home/euibin/workspace/LOFT/BlockMirror_test/lib/blockly/blocks_compressed.js" type="text/javascript"></script>
-    <script src="../lib/blockly/msg/js/en.js" type="text/javascript"></script>
-    <script src="../lib/blockly/python_compressed.js" type="text/javascript"></script> -->
-
-    <!-- CodeMirror -->
-    <link rel="stylesheet" href="lib/codemirror/codemirror.css">
-    <link rel="stylesheet" href="lib/codemirror/fullscreen.css">
-    <link rel="stylesheet" href="lib/codemirror/show-hint.css">
-    <script src="lib/codemirror/codemirror.js" type="text/javascript"></script>
-    <script src="lib/codemirror/show-hint.js" type="text/javascript"></script>
-    <script src="lib/codemirror/python-hint.js" type="text/javascript"></script>
-    <script src="lib/codemirror/fullscreen.js" type="text/javascript"></script>
-    <script src="lib/codemirror/python.js" type="text/javascript"></script>
-
-    <!-- Skulpt -->
-    <script src="dist/skulpt_parser.js" type="text/javascript"></script>
-    
-
-
-
-    <!-- BlockMirror -->
-    <!-- <link rel="stylesheet" href="../dist/block_mirror.css">
-    <script src="../dist/block_mirror.js" type="text/javascript"></script> -->
-
+  <meta charset="utf-8">
+  <title>Blockly + Python 실행 예제</title>
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <!-- <script src="./node_modules/blockly/blockly_compressed"></script>
+  <script src="./node_modules/blockly/blocks_compressed.js"></script>
+  <script src="./node_modules/blockly/python_compressed.js"></script> -->
+  <script src="./node_modules/skulpt/dist/skulpt.min.js" type="text/javascript"></script> 
+  <script src="./node_modules/skulpt/dist/skulpt-stdlib.js" type="text/javascript"></script> 
+  <style>
+    html, body { height: 100%; margin: 0; font-family: sans-serif; }
+    #blocklyDiv { height: 60%; width: 100%; }
+    #codeArea, #outputArea {
+      padding: 10px;
+      font-family: monospace;
+      background: #f0f0f0;
+      white-space: pre-wrap;
+    }
+    #buttons { padding: 10px; background: #eee; }
+  </style>
 </head>
 <body>
-    <button onclick="Download()">다운로드</button>
-    
-    <!-- <script src="lib/es6/data-flow.js" type="module"></script>
-    <script src="lib/es6/python-parser.js" type="module"></script>
-    <script src="lib/es6/control-flow.js" type="module"></script>
-    <script src="lib/es6/set.js" type="module"></script>
-    <script src="lib/es6/set.js" type="module"></script>
-    <script src="lib/es6/set.js" type="module"></script>
-    <script src="lib/es6/set.js" type="module"></script> -->
-    <script src="lib/es6/index.js" type="module"></script>
-    
-    <script src="index.js" type="module"></script>
 
-    <button id='go'>GO</button>
-    <button id='make-image'>Make Image</button>
-    <div id="image-spot"></div>
-    <div style="width:900px; margin:0 auto;"
-     id='example-frame'>
-
-
-    <div class="btn-group" data-toggle="buttons" data-bind="visible: !assignment.upload()">
-        <label onclick="editor.setMode('block');">
-            <input type="radio" name="blockpy-mode-set" autocomplete="off"> Blocks
-        </label>
-        <label onclick="editor.setMode('split');">
-            <input type="radio" name="blockpy-mode-set" autocomplete="off" checked> Split
-        </label>
-        <label onclick="editor.setMode('text');">
-            <input type="radio" name="blockpy-mode-set" autocomplete="off"> Text
-        </label>
-        <label onclick="editor.setMode('summary');">
-            <input type="radio" name="blockpy-mode-set" autocomplete="off"> Summary
-        </label>
+    <div id="blocklyDiv"></div>
+  
+    <div id="buttons">
+      <button onclick="runCode()">▶ 실행</button>
     </div>
-
-    <div class="btn-group" data-toggle="buttons" style="display: inline-block">
-        <label>
-            <input type="checkbox" name="blockpy-mode-set" checked
-                   onclick="editor.setImageMode(!editor.configuration.imageMode);">
-            Image Mode
-        </label>
-    </div>
-
-
-    <div id="blockmirror-editor"></div>
-</div>
-
-<!--Python Analysis-->
-<!-- <script src="../dist_py/data-flow.js"></script> -->
-<!-- <script src="../dist_py/es6/check.js"></script> -->
-</body>
+  
+    <div><strong>🔤 Python 코드:</strong></div>
+    <pre id="codeArea">// 블록을 조립하면 여기에 Python 코드가 생성됩니다.</pre>
+  
+    <div><strong>📤 실행 결과:</strong></div>
+    <pre id="outputArea">// 여기에 결과가 출력됩니다.</pre>
+  
+    <xml id="toolbox" style="display: none">
+      <block type="math_number"></block>
+      <!-- <block type="multiply_numbers"></block>
+      <block type="print_input"></block>
+      <block type="has_close_elements"></block>
+      <block type="intersperse"></block> -->
+      <block type="is_prime"></block>
+      <!-- <block type="my_custom_block"></block> -->
+    </xml>
+  
+    <!-- 💡 JavaScript 파일 로드 -->
+    <script src="main.js" type="module"></script>
+  </body>
 </html>

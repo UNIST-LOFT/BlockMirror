@@ -8580,3 +8580,5 @@ Sk.INHERITANCE_MAP = {
 Sk.exportSymbol("Sk.astFromParse", Sk.astFromParse);
 Sk.exportSymbol("Sk.astDump", Sk.astDump);
 Sk.exportSymbol("Sk.INHERITANCE_MAP", Sk.INHERITANCE_MAP);
+
+export default Sk;

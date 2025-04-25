@@ -1282,6 +1282,11 @@ BlockMirrorBlockEditor.prototype.setMode = function (mode) {
 
 
 BlockMirrorBlockEditor.prototype.getCode = function () {
+  var code = this._code;
+  console.log(code)
+  var result = this.blockMirror.textToBlocks.convertSource('__main__.py', code);
+  var xml_code_original = Blockly.Xml.textToDom(result.xml);
+  console.log(xml_code_original);
   return this._code;
   // return Blockly.Python.workspaceToCode(this.workspace);
 };
@@ -1440,8 +1445,82 @@ BlockMirrorBlockEditor.prototype.setCode = function (code, quietly) {
       
       this.workspace.clear();
       // var id = ;
+
+      var text = `
+      <block type="ast_FunctionDef" line_number="2" inline="false">
+        <mutation decorators="0" parameters="2" returns="false" />
+        <field name="NAME">add</field>
+        <value name="PARAMETER0">
+          <block type="ast_FunctionParameter" line_number="2" movable="false" deletable="false">
+            <field name="NAME">a</field>
+          </block>
+        </value>
+        <value name="PARAMETER1">
+          <block type="ast_FunctionParameter" line_number="2" movable="false" deletable="false">
+            <field name="NAME">b</field>
+          </block>
+        </value>
+        <statement name="BODY">
+          <block type="ast_StrDocstring" line_number="3">
+            <field name="TEXT">sum = a + b
+      result = sum * c
+
+      return result</field>
+            <next>
+              <block type="ast_ReturnFull" line_number="6">
+                <value name="VALUE">
+                  <block type="ast_Name" line_number="6">
+                    <field name="VAR">result</field>
+                  </block>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+      `;
+
+      text = `
+      <block type="ast_FunctionDef" line_number="1" inline="false">
+          <mutation decorators="0" parameters="2" returns="true" />
+          <field name="NAME">has_close_elements</field>
+          <value name="PARAMETER0">
+              <block type="ast_FunctionParameter" line_number="1" movable="false" deletable="false">
+                  <field name="NAME">numbers</field>
+              </block>
+          </value>
+          <value name="PARAMETER1">
+              <block type="ast_FunctionParameter" line_number="1" movable="false" deletable="false">
+                  <field name="NAME">threshold</field>
+              </block>
+          </value>
+          <statement name="BODY">
+              <block type="ast_ReturnFull" line_number="2">
+                  <field name="TEXT">numbers.sort()
+          for i in range(len(numbers) - 1):
+              if abs(numbers[i] - numbers[i + 1]) &lt; threshold:
+                  result = True
+                  return result
+          result = False
+          return result</field>
+                  <value name="VALUE">
+                      <block type="ast_Name" line_number="8">
+                          <field name="VAR">result</field>
+                      </block>
+                  </value>
+              </block>
+          </statement>
+      </block>
+      `;
+
+      let xmlParser = new DOMParser(); 
+      let xmlDoc = xmlParser.parseFromString(text, "text/xml");
+
       console.log("ID");
       console.log(xml_code);
+      // xml_code = xmlDoc;
+      console.log(this._code);
+      console.log("END")
       console.log(Blockly.Xml.domToWorkspace(xml_code, this.workspace));
 
       if (this.blockMirror.isParsons()) {
@@ -1463,6 +1542,7 @@ BlockMirrorBlockEditor.prototype.setCode = function (code, quietly) {
   } else {
     this.outOfDate_ = code;
   }
+  
   return xml_code;
 };
 
@@ -4358,6 +4438,20 @@ BlockMirrorTextToBlocks.BLOCKS.push({
 BlockMirrorTextToBlocks.BLOCKS.push({
   "type": "ast_StrDocstring",
   "message0": "Docstring: %1 %2",
+  "args0": [{
+    "type": "input_dummy"
+  }, {
+    "type": "field_multilinetext",
+    "name": "TEXT",
+    "value": ''
+  }],
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": BlockMirrorTextToBlocks.COLOR.TEXT
+});
+BlockMirrorTextToBlocks.BLOCKS.push({
+  "type": "ast_StrRawcode",
+  "message0": "%1",
   "args0": [{
     "type": "input_dummy"
   }, {
