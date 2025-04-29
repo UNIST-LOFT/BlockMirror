@@ -1511,10 +1511,10 @@ return result</field>
     </statement>
 </block>
       `;
-      text = `
-    <block type="ast_Call" line_number="2" inline="true"><mutation arguments="1" returns="true" parameters="true" method="false" name="is_prime" message="is_prime" premessage="" colour="210" module=""><arg name="UNKNOWN_ARG:0" /></mutation><value name="ARG0"><block type="ast_Name" line_number="2"><field name="VAR">n</field></block></value></block>
+    //   text = `
+    // <block type="ast_Call" line_number="2" inline="true"><mutation arguments="1" returns="true" parameters="true" method="false" name="is_prime" message="is_prime" premessage="" colour="210" module=""><arg name="UNKNOWN_ARG:0" /></mutation><value name="ARG0"><block type="ast_Name" line_number="2"><field name="VAR">n</field></block></value></block>
 
-    `;
+    // `;
 
       let xmlParser = new DOMParser(); 
       let xmlDoc = xmlParser.parseFromString(text, "text/xml");
