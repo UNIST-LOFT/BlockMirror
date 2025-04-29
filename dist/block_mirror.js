@@ -1521,7 +1521,7 @@ return result</field>
 
       console.log("ID");
       console.log(xml_code);
-      xml_code = xmlDoc;
+      // xml_code = xmlDoc;
       console.log(Blockly.Xml.domToWorkspace(xml_code, this.workspace));
 
       if (this.blockMirror.isParsons()) {
