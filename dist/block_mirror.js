@@ -16,7 +16,7 @@ import * as pyAnalyzer from '../lib/es6/index.js';
 // import _ from 'lodash-es';
 // import * as PyAnlayzer from '@msrvida/python-program-analysis';
 
-// import Sk from './skulpt_parser.js';
+import Sk from './skulpt_parser.js';
 // import CodeMirror from "../lib/codemirror/codemirror.js";
 
 
@@ -1521,7 +1521,7 @@ return result</field>
 
       console.log("ID");
       console.log(xml_code);
-      // xml_code = xmlDoc;
+      xml_code = xmlDoc;
       console.log(Blockly.Xml.domToWorkspace(xml_code, this.workspace));
 
       if (this.blockMirror.isParsons()) {
