@@ -3789,6 +3789,39 @@ Blockly.Python['ast_Num'] = function (block) {
   return [code, order];
 };
 
+Blockly.Python['ast_Summerized_FunctionDef'] = function(block) {
+  var functionName = block.getFieldValue('NAME');
+  var params = [];
+  
+  // mutation으로부터 parameters 개수만큼 field 읽어오기
+  var mutation = block.mutationToDom();
+  var paramCount = 0;
+  if (mutation) {
+    paramCount = parseInt(mutation.getAttribute('parameters') || "0");
+  }
+  for (var i = 0; i < paramCount; i++) {
+    var paramBlock = Blockly.Python.valueToCode(block, 'PARAMETER' + i, Blockly.Python.ORDER_NONE);
+    if (paramBlock) {
+      params.push(paramBlock.trim());
+    }
+  }
+
+  var body = Blockly.Python.statementToCode(block, 'BODY');
+  
+  // 함수 body의 TEXT 필드 가져오기
+  var bodyBlock = block.getInputTargetBlock('BODY');
+  var bodyText = '';
+  if (bodyBlock && bodyBlock.getField('TEXT')) {
+    bodyText = bodyBlock.getFieldValue('TEXT') || '';
+    bodyText = Blockly.Python.prefixLines(bodyText, Blockly.Python.INDENT);
+  }
+
+  var code = `def ${functionName}(${params.join(', ')}):\n`;
+  code += bodyText || Blockly.Python.INDENT + 'pass\n';
+  
+  return code;
+};
+
 BlockMirrorTextToBlocks.prototype['ast_Num'] = function (node, parent) {
   var n = node.n;
   return BlockMirrorTextToBlocks.create_block("ast_Num", node.lineno, {
@@ -4462,6 +4495,29 @@ BlockMirrorTextToBlocks.BLOCKS.push({
   "previousStatement": null,
   "nextStatement": null,
   "colour": BlockMirrorTextToBlocks.COLOR.TEXT
+});
+BlockMirrorTextToBlocks.BLOCKS.push({
+  "type": "ast_Summerized_FunctionDef",
+  "message0": "def %1 ( %2 ) : %3",
+  "args0": [
+    {
+      "type": "field_input",
+      "name": "NAME",
+      "text": "function_name"
+    },
+    {
+      "type": "input_dummy"
+    },
+    {
+      "type": "input_statement",
+      "name": "BODY"
+    }
+  ],
+  "mutator": "parameters_mutator",
+  "colour": 290,
+  "inputsInline": false,
+  "tooltip": "Summarized function definition",
+  "helpUrl": ""
 });
 Blockly.Blocks['ast_Image'] = {
   init: function init() {
