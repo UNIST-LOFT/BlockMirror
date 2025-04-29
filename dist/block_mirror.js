@@ -1282,11 +1282,6 @@ BlockMirrorBlockEditor.prototype.setMode = function (mode) {
 
 
 BlockMirrorBlockEditor.prototype.getCode = function () {
-  var code = this._code;
-  console.log(code)
-  var result = this.blockMirror.textToBlocks.convertSource('__main__.py', code);
-  var xml_code_original = Blockly.Xml.textToDom(result.xml);
-  console.log(xml_code_original);
   return this._code;
   // return Blockly.Python.workspaceToCode(this.workspace);
 };
@@ -1481,46 +1476,52 @@ BlockMirrorBlockEditor.prototype.setCode = function (code, quietly) {
       `;
 
       text = `
-      <block type="ast_FunctionDef" line_number="1" inline="false">
-          <mutation decorators="0" parameters="2" returns="true" />
-          <field name="NAME">has_close_elements</field>
-          <value name="PARAMETER0">
-              <block type="ast_FunctionParameter" line_number="1" movable="false" deletable="false">
-                  <field name="NAME">numbers</field>
-              </block>
-          </value>
-          <value name="PARAMETER1">
-              <block type="ast_FunctionParameter" line_number="1" movable="false" deletable="false">
-                  <field name="NAME">threshold</field>
-              </block>
-          </value>
-          <statement name="BODY">
-              <block type="ast_ReturnFull" line_number="2">
-                  <field name="TEXT">numbers.sort()
-          for i in range(len(numbers) - 1):
-              if abs(numbers[i] - numbers[i + 1]) &lt; threshold:
-                  result = True
-                  return result
-          result = False
-          return result</field>
-                  <value name="VALUE">
-                      <block type="ast_Name" line_number="8">
-                          <field name="VAR">result</field>
-                      </block>
-                  </value>
-              </block>
-          </statement>
-      </block>
+<block type="ast_Summerized_FunctionDef" line_number="2" inline="false">
+    <mutation decorators="0" parameters="1" returns="false" />
+    <field name="NAME">is_prime</field>
+    <value name="PARAMETER0">
+        <block type="ast_FunctionParameter" line_number="2" movable="false" deletable="false">
+            <field name="NAME">n</field>
+        </block>
+    </value>
+    <statement name="BODY">
+        <block type="ast_ReturnFull" line_number="3">
+            <field name="TEXT">if n &lt;= 1:
+    result = False
+elif n &lt;= 3:
+    result = True
+elif n % 2 == 0 or n % 3 == 0:
+    result = False
+else:
+    i = 5
+    while i * i &lt;= n:
+        if n % i == 0 or n % (i + 2) == 0:
+            result = False
+            break
+        i += 6
+    else:
+        result = True
+return result</field>
+            <value name="VALUE">
+                <block type="ast_Name" line_number="18">
+                    <field name="VAR">result</field>
+                </block>
+            </value>
+        </block>
+    </statement>
+</block>
       `;
+      text = `
+    <block type="ast_Call" line_number="2" inline="true"><mutation arguments="1" returns="true" parameters="true" method="false" name="is_prime" message="is_prime" premessage="" colour="210" module=""><arg name="UNKNOWN_ARG:0" /></mutation><value name="ARG0"><block type="ast_Name" line_number="2"><field name="VAR">n</field></block></value></block>
+
+    `;
 
       let xmlParser = new DOMParser(); 
       let xmlDoc = xmlParser.parseFromString(text, "text/xml");
 
       console.log("ID");
       console.log(xml_code);
-      // xml_code = xmlDoc;
-      console.log(this._code);
-      console.log("END")
+      xml_code = xmlDoc;
       console.log(Blockly.Xml.domToWorkspace(xml_code, this.workspace));
 
       if (this.blockMirror.isParsons()) {
@@ -1542,7 +1543,6 @@ BlockMirrorBlockEditor.prototype.setCode = function (code, quietly) {
   } else {
     this.outOfDate_ = code;
   }
-  
   return xml_code;
 };
 
@@ -3789,39 +3789,6 @@ Blockly.Python['ast_Num'] = function (block) {
   return [code, order];
 };
 
-Blockly.Python['ast_Summerized_FunctionDef'] = function(block) {
-  var functionName = block.getFieldValue('NAME');
-  var params = [];
-  
-  // mutation으로부터 parameters 개수만큼 field 읽어오기
-  var mutation = block.mutationToDom();
-  var paramCount = 0;
-  if (mutation) {
-    paramCount = parseInt(mutation.getAttribute('parameters') || "0");
-  }
-  for (var i = 0; i < paramCount; i++) {
-    var paramBlock = Blockly.Python.valueToCode(block, 'PARAMETER' + i, Blockly.Python.ORDER_NONE);
-    if (paramBlock) {
-      params.push(paramBlock.trim());
-    }
-  }
-
-  var body = Blockly.Python.statementToCode(block, 'BODY');
-  
-  // 함수 body의 TEXT 필드 가져오기
-  var bodyBlock = block.getInputTargetBlock('BODY');
-  var bodyText = '';
-  if (bodyBlock && bodyBlock.getField('TEXT')) {
-    bodyText = bodyBlock.getFieldValue('TEXT') || '';
-    bodyText = Blockly.Python.prefixLines(bodyText, Blockly.Python.INDENT);
-  }
-
-  var code = `def ${functionName}(${params.join(', ')}):\n`;
-  code += bodyText || Blockly.Python.INDENT + 'pass\n';
-  
-  return code;
-};
-
 BlockMirrorTextToBlocks.prototype['ast_Num'] = function (node, parent) {
   var n = node.n;
   return BlockMirrorTextToBlocks.create_block("ast_Num", node.lineno, {
@@ -4432,6 +4399,89 @@ BlockMirrorTextToBlocks.prototype['ast_AugAssign'] = function (node, parent) {
   });
 };
 
+Blockly.Constants.Functions = Blockly.Constants.Functions || {};
+
+Blockly.Constants.Functions.PARAMETERS_MUTATOR_MIXIN = {
+  mutationToDom: function() {
+    const container = Blockly.utils.xml.createElement('mutation');
+    container.setAttribute('parameters', this.parameterCount_ || 0);
+    return container;
+  },
+
+  domToMutation: function(xmlElement) {
+    this.parameterCount_ = parseInt(xmlElement.getAttribute('parameters'), 10) || 0;
+    this.rebuildBlock_();
+  },
+
+  decompose: function(workspace) {
+    const containerBlock = workspace.newBlock('parameters_mutator_container');
+    containerBlock.initSvg();
+    let connection = containerBlock.getInput('STACK').connection;
+    for (let i = 0; i < this.parameterCount_; i++) {
+      const paramBlock = workspace.newBlock('parameters_mutator_parameter');
+      paramBlock.initSvg();
+      connection.connect(paramBlock.previousConnection);
+      connection = paramBlock.nextConnection;
+    }
+    return containerBlock;
+  },
+
+  compose: function(containerBlock) {
+    const paramBlocks = [];
+    let paramBlock = containerBlock.getInputTargetBlock('STACK');
+    while (paramBlock) {
+      paramBlocks.push(paramBlock);
+      paramBlock = paramBlock.nextConnection && paramBlock.nextConnection.targetBlock();
+    }
+
+    this.parameterCount_ = paramBlocks.length;
+    this.rebuildBlock_();
+  },
+
+  saveExtraState: function() {
+    return { 'parameters': this.parameterCount_ };
+  },
+
+  loadExtraState: function(state) {
+    this.parameterCount_ = state['parameters'] || 0;
+    this.rebuildBlock_();
+  },
+
+  rebuildBlock_: function() {
+    // 1. 기존 모든 input 제거
+    while (this.inputList.length) {
+      this.removeInput(this.inputList[0].name);
+    }
+
+    // 2. NAME 추가
+    this.appendDummyInput('NAME_INPUT')
+        .appendField('def')
+        .appendField(new Blockly.FieldTextInput('function_name'), 'NAME')
+        .appendField('(');
+
+    // 3. PARAMS 추가
+    for (let i = 0; i < this.parameterCount_; i++) {
+      this.appendDummyInput('PARAM' + i)
+          .appendField(new Blockly.FieldTextInput('param' + i), 'PARAM' + i);
+    }
+
+    // 4. 닫는 괄호 추가
+    this.appendDummyInput('CLOSE_PAREN')
+        .appendField('):');
+
+    // 5. BODY 추가
+    this.appendStatementInput('BODY')
+        .setCheck(null)
+        .appendField('body');
+
+    // 6. Inline 설정
+    this.setInputsInline(true);
+  }
+};
+
+Blockly.Extensions.registerMutator('parameters_mutator',
+  Blockly.Constants.Functions.PARAMETERS_MUTATOR_MIXIN, null, ['parameters_mutator_parameter']);
+
 BlockMirrorTextToBlocks.BLOCKS.push({
   "type": "ast_Str",
   "message0": "%1",
@@ -4483,20 +4533,6 @@ BlockMirrorTextToBlocks.BLOCKS.push({
   "colour": BlockMirrorTextToBlocks.COLOR.TEXT
 });
 BlockMirrorTextToBlocks.BLOCKS.push({
-  "type": "ast_StrRawcode",
-  "message0": "%1",
-  "args0": [{
-    "type": "input_dummy"
-  }, {
-    "type": "field_multilinetext",
-    "name": "TEXT",
-    "value": ''
-  }],
-  "previousStatement": null,
-  "nextStatement": null,
-  "colour": BlockMirrorTextToBlocks.COLOR.TEXT
-});
-BlockMirrorTextToBlocks.BLOCKS.push({
   "type": "ast_Summerized_FunctionDef",
   "message0": "def %1 ( %2 ) : %3",
   "args0": [
@@ -4519,6 +4555,34 @@ BlockMirrorTextToBlocks.BLOCKS.push({
   "tooltip": "Summarized function definition",
   "helpUrl": ""
 });
+
+BlockMirrorTextToBlocks.BLOCKS.push({
+  "type": "parameters_mutator_container",
+  "message0": "parameters %1 %2",
+  "args0": [
+    {
+      "type": "input_dummy"
+    },
+    {
+      "type": "input_statement",
+      "name": "STACK"
+    }
+  ],
+  "colour": 290,
+  "tooltip": "Add or remove parameters",
+  "enableContextMenu": false
+});
+
+BlockMirrorTextToBlocks.BLOCKS.push({
+  "type": "parameters_mutator_parameter",
+  "message0": "parameter",
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": 290,
+  "tooltip": "Represents a single parameter",
+  "enableContextMenu": false
+});
+
 Blockly.Blocks['ast_Image'] = {
   init: function init() {
     this.setColour(BlockMirrorTextToBlocks.COLOR.TEXT);
@@ -4610,6 +4674,39 @@ Blockly.Python['ast_StrDocstring'] = function (block) {
   }
 
   return Blockly.Python.multiline_quote_(code) + "\n";
+};
+
+Blockly.Python['ast_Summerized_FunctionDef'] = function(block) {
+  var functionName = block.getFieldValue('NAME');
+  var params = [];
+  
+  // mutation으로부터 parameters 개수만큼 field 읽어오기
+  var mutation = block.mutationToDom();
+  var paramCount = 0;
+  if (mutation) {
+    paramCount = parseInt(mutation.getAttribute('parameters') || "0");
+  }
+  for (var i = 0; i < paramCount; i++) {
+    var paramBlock = Blockly.Python.valueToCode(block, 'PARAMETER' + i, Blockly.Python.ORDER_NONE);
+    if (paramBlock) {
+      params.push(paramBlock.trim());
+    }
+  }
+
+  var body = Blockly.Python.statementToCode(block, 'BODY');
+  
+  // 함수 body의 TEXT 필드 가져오기
+  var bodyBlock = block.getInputTargetBlock('BODY');
+  var bodyText = '';
+  if (bodyBlock && bodyBlock.getField('TEXT')) {
+    bodyText = bodyBlock.getFieldValue('TEXT') || '';
+    bodyText = Blockly.Python.prefixLines(bodyText, Blockly.Python.INDENT);
+  }
+
+  var code = `def ${functionName}(${params.join(', ')}):\n`;
+  code += bodyText || Blockly.Python.INDENT + 'pass\n';
+  
+  return code;
 };
 
 BlockMirrorTextToBlocks.prototype.isSingleChar = function (text) {
