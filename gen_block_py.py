@@ -71,7 +71,7 @@ def generate_code(description):
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are an assistant that writes python code."},
-                {"role": "user", "content": f"Please complete python code just send it for the following task: {description}. Also, if there is a return value, please make sure to save that value in a variable named 'result' and then return that 'result' value."}
+                {"role": "user", "content": f"Please complete python code just send it for the following task: {description}. To make it easier for users to understand, please specify the type of input parameters. For example: 'a: list[int]' or 'b: str', etc. Also, if there is a return value, please make sure to save that value in a variable named 'result' and then return that 'result' value."}
             ],
             temperature=0
         )
@@ -101,6 +101,25 @@ def extract_return_var(func_node):
             if isinstance(stmt.value, ast.Name):
                 return stmt.value.id, stmt.lineno
     return None, None
+
+
+def parse_function_signature(code: str):
+    """주어진 파이썬 코드에서 함수 이름, 인자, 반환 여부를 추출"""
+    tree = ast.parse(code)
+    func_def = next((node for node in tree.body if isinstance(node, ast.FunctionDef)), None)
+    if not func_def:
+        raise ValueError("No function definition found.")
+
+    func_name = func_def.name
+    args = [arg.arg for arg in func_def.args.args]
+    returns = ast.unparse(func_def.returns) if func_def.returns else "None"
+    has_return = returns != "None"
+
+    return {
+        "name": func_name,
+        "args": args,
+        "has_return": has_return
+    }
 
 def create_function_block_xml(code):
     tree = ast.parse(code)
@@ -171,44 +190,70 @@ def create_function_block_xml(code):
 
     return blocks
 
-def create_ast_call_block_from_code(func_code_str):
-    # 파싱
-    tree = ast.parse(func_code_str)
-    func_node = next((node for node in tree.body if isinstance(node, ast.FunctionDef)), None)
-    if func_node is None:
+def get_type_hint(arg: ast.arg) -> str:
+    if arg.annotation:
+        if isinstance(arg.annotation, ast.Name):
+            return arg.annotation.id
+        elif isinstance(arg.annotation, ast.Subscript):
+            return arg.annotation.value.id  # e.g., List[int] -> List
+    return "number"  # default fallback
+
+def map_type_to_block(param_type: str) -> tuple[str, str, str]:
+    """자료형에 따른 Blockly shadow block 매핑"""
+    if param_type in ("int", "float", "number"):
+        return "math_number", "NUM", "0"
+    elif param_type == "str":
+        return "text", "TEXT", ""
+    elif param_type in ("list", "List"):
+        return "lists_create_with", None, None  # no field
+    elif param_type in ("dict", "Dict"):
+        return None, None, None  # unsupported yet
+    else:
+        return "text", "TEXT", ""  # fallback
+
+def has_explicit_return(func_def: ast.FunctionDef) -> bool:
+    """함수 내부에 return 문이 존재하는지 검사"""
+    class ReturnVisitor(ast.NodeVisitor):
+        def __init__(self):
+            self.found = False
+        def visit_Return(self, node):
+            if node.value is not None:
+                self.found = True
+    visitor = ReturnVisitor()
+    visitor.visit(func_def)
+    return visitor.found
+
+def create_ast_call_block_from_code(code):
+    tree = ast.parse(code)
+    func_def = next((node for node in tree.body if isinstance(node, ast.FunctionDef)), None)
+    if not func_def:
         raise ValueError("No function definition found.")
 
-    func_name = func_node.name
-    parameters = [arg.arg for arg in func_node.args.args]
+    func_name = func_def.name
+    args = func_def.args.args
 
-    # block 생성
-    block = ET.Element("block", type="ast_Call", line_number=str(func_node.lineno), inline="true")
+    block = ET.Element("block", type="procedures_callreturn")
+    mutation = ET.SubElement(block, "mutation", name=func_name)
 
-    # mutation 생성
-    mutation = ET.SubElement(block, "mutation", {
-        "arguments": str(len(parameters)),
-        "returns": "true",  # 또는 함수 반환 유무 판단 가능
-        "parameters": "true",
-        "method": "false",
-        "name": func_name,
-        "message": func_name,
-        "premessage": "",
-        "colour": "210",
-        "module": ""
-    })
+    for arg in args:
+        ET.SubElement(mutation, "arg", name=arg.arg)
 
-    # <arg> 요소들 추가
-    for i, param in enumerate(parameters):
-        arg = ET.SubElement(mutation, "arg", name=f"UNKNOWN_ARG:{i}")
+    for idx, arg in enumerate(args):
+        param_type = get_type_hint(arg)
+        shadow_type, field_name, field_value = map_type_to_block(param_type)
 
-    # 각 ARGi 블록 추가
-    for idx, param in enumerate(parameters):
         value = ET.SubElement(block, "value", name=f"ARG{idx}")
-        name_block = ET.SubElement(value, "block", type="ast_Name", line_number=str(func_node.lineno))
-        name_field = ET.SubElement(name_block, "field", name="VAR")
-        name_field.text = param
+        if shadow_type:
+            shadow = ET.SubElement(value, "shadow", type=shadow_type)
+            if field_name:
+                field = ET.SubElement(shadow, "field", name=field_name)
+                field.text = field_value
+        else:
+            # No shadow (e.g., for dict), leave input blank
+            continue
 
-    print(ET.tostring(block, encoding='unicode'))
+    # XML 문자열 반환
+    print(ET.tostring(block, encoding="unicode"))
     return block
 
 def print_pretty_xml(elem):
@@ -332,8 +377,10 @@ prompts, entry_points = read_prompts_from_jsonl(file_path)
 
 
 # 예시 자연어 설명
-prompt = "Return true if a given number is prime, and false otherwise.\n    >>> is_prime(6)\n    False\n    >>> is_prime(101)\n    True\n    >>> is_prime(11)\n    True\n    >>> is_prime(13441)\n    True\n    >>> is_prime(61)\n    True\n    >>> is_prime(4)\n    False\n    >>> is_prime(1)\n    False\n    \"\"\"\n"
-# prompt = "Return the summation of two input integers"
+# prompt = "Return true if a given number is prime, and false otherwise.\n    >>> is_prime(6)\n    False\n    >>> is_prime(101)\n    True\n    >>> is_prime(11)\n    True\n    >>> is_prime(13441)\n    True\n    >>> is_prime(61)\n    True\n    >>> is_prime(4)\n    False\n    >>> is_prime(1)\n    False\n    \"\"\"\n"
+prompt = "Return the summation of two input integers"
+prompt = "Return sum of given integer list"
+prompt = "Return the first capital letter of given string"
 
 def generate_block_from_nld(prompt):
     output = generate_code(prompt)

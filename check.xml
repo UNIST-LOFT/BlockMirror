@@ -1,0 +1,34 @@
+<block type="ast_Summerized_FunctionDef" line_number="2" inline="false">
+    <mutation decorators="0" parameters="1" returns="false"/>
+    <field name="NAME">is_prime</field>
+    <value name="PARAMETER0">
+        <block type="ast_FunctionParameter" line_number="2" movable="false" deletable="false">
+            <field name="NAME">n</field>
+        </block>
+    </value>
+    <statement name="BODY">
+        <block type="ast_ReturnFull" line_number="3">
+            <field name="TEXT">if n &lt;= 1:
+    result = False
+elif n &lt;= 3:
+    result = True
+elif n % 2 == 0 or n % 3 == 0:
+    result = False
+else:
+    i = 5
+    while i * i &lt;= n:
+        if n % i == 0 or n % (i + 2) == 0:
+            result = False
+            break
+        i += 6
+    else:
+        result = True
+return result</field>
+            <value name="VALUE">
+                <block type="ast_Name" line_number="18">
+                    <field name="VAR">result</field>
+                </block>
+            </value>
+        </block>
+    </statement>
+</block>
